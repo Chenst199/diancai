@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>川渝家常菜点菜</title>
+<style>
+  body {
+    font-family: sans-serif;
+    background-color: #f8fff8;
+    margin: 0;
+    padding: 0;
+  }
+  header {
+    background-color: #2e8b57;
+    color: white;
+    text-align: center;
+    padding: 10px;
+    font-size: 1.4em;
+  }
+  .search-bar {
+    padding: 10px;
+    display: flex;
+    gap: 10px;
+  }
+  .search-bar input {
+    flex: 1;
+    padding: 8px;
+    border: 1px solid #2e8b57;
+    border-radius: 5px;
+    font-size: 1em;
+  }
+  .search-bar button {
+    background: #2e8b57;
+    color: white;
+    border: none;
+    padding: 0 12px;
+    border-radius: 5px;
+    font-size: 1em;
+    cursor: pointer;
+  }
+  .category {
+    display: flex;
+    overflow-x: auto;
+    gap: 5px;
+    padding: 5px 10px;
+    background: #eafaea;
+  }
+  .category button {
+    padding: 6px 10px;
+    border: 1px solid #2e8b57;
+    border-radius: 5px;
+    background: white;
+    color: #2e8b57;
+    font-size: 0.9em;
+    cursor: pointer;
+  }
+  .category button.active {
+    background: #2e8b57;
+    color: white;
+  }
+  .menu {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    padding: 10px;
+  }
+  .dish {
+    border: 1px solid #cceccc;
+    border-radius: 8px;
+    background: white;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  .dish h3 {
+    margin: 0;
+    font-size: 1.1em;
+    color: #2e8b57;
+  }
+  .dish .controls {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 5px;
+  }
+  .dish button {
+    background: #2e8b57;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-size: 1em;
+    cursor: pointer;
+  }
+  .cart {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: white;
+    border-top: 1px solid #cceccc;
+    padding: 10px;
+  }
+  .cart button {
+    background: #2e8b57;
+    color: white;
+    padding: 10px;
+    border: none;
+    border-radius: 8px;
+    width: 100%;
+    font-size: 1.1em;
+    cursor: pointer;
+  }
+  .cart-details {
+    display: none;
+    max-height: 200px;
+    overflow-y: auto;
+    margin-top: 5px;
+  }
+  .cart-details table {
+    width: 100%;
+    font-size: 0.9em;
+    border-collapse: collapse;
+  }
+  .cart-details td, .cart-details th {
+    padding: 5px;
+    border-bottom: 1px solid #cceccc;
+  }
+</style>
+</head>
+<body>
+
+<header>川渝家常菜点菜</header>
+
+<div class="search-bar">
+  <input type="text" id="search" placeholder="搜索菜名..." />
+  <button id="randomPick">随机点3道</button>
+</div>
+
+<div class="category" id="categoryButtons">
+  <button class="active" data-cat="全部">全部</button>
+  <button data-cat="川菜">川菜</button>
+  <button data-cat="重庆">重庆</button>
+  <button data-cat="家常">家常</button>
+  <button data-cat="主食">主食</button>
+  <button data-cat="汤">汤</button>
+  <button data-cat="凉菜">凉菜</button>
+</div>
+
+<div class="menu" id="menu"></div>
+
+<div class="cart">
+  <button id="toggleCart">购物车 (0) - ¥0</button>
+  <div class="cart-details" id="cartDetails">
+    <table id="cartTable">
+      <thead><tr><th>菜名</th><th>数量</th><th>价格</th></tr></thead>
+      <tbody></tbody>
+    </table>
+    <button onclick="clearCart()">清空购物车</button>
+  </div>
+</div>
+
+<script>
+const dishes = [
+  // 川菜
+  {name:"宫保鸡丁", cat:"川菜", price:28},
+  {name:"鱼香肉丝", cat:"川菜", price:26},
+  {name:"麻婆豆腐", cat:"川菜", price:20},
+  {name:"水煮鱼", cat:"川菜", price:48},
+  {name:"水煮牛肉", cat:"川菜", price:52},
+  {name:"干锅花菜", cat:"川菜", price:28},
+  {name:"回锅肉", cat:"川菜", price:32},
+  {name:"香辣虾", cat:"川菜", price:58},
+  {name:"香辣蟹", cat:"川菜", price:68},
+  {name:"豆花牛肉", cat:"川菜", price:38},
+  {name:"鱼香茄子", cat:"川菜", price:22},
+  {name:"尖椒肥肠", cat:"川菜", price:45},
+  {name:"粉蒸肉", cat:"川菜", price:36},
+  {name:"泡椒凤爪", cat:"川菜", price:28},
+  {name:"红油抄手", cat:"川菜", price:18},
+  {name:"棒棒鸡", cat:"川菜", price:26},
+  {name:"夫妻肺片", cat:"川菜", price:36},
+
+  // 重庆
+  {name:"辣子鸡", cat:"重庆", price:42},
+  {name:"酸菜鱼", cat:"重庆", price:45},
+  {name:"重庆火锅", cat:"重庆", price:88},
+  {name:"毛血旺", cat:"重庆", price:55},
+  {name:"烧椒皮蛋", cat:"重庆", price:18},
+  {name:"歌乐山辣子鸡", cat:"重庆", price:48},
+  {name:"重庆小面", cat:"重庆", price:12},
+  {name:"豌杂面", cat:"重庆", price:14},
+  {name:"红油凉面", cat:"重庆", price:10},
+  {name:"重庆酸辣粉", cat:"重庆", price:14},
+  {name:"老麻抄手", cat:"重庆", price:16},
+  {name:"口水鸡", cat:"重庆", price:28},
+
+  // 家常
+  {name:"红烧肉", cat:"家常", price:36},
+  {name:"西红柿炒鸡蛋", cat:"家常", price:18},
+  {name:"青椒肉丝", cat:"家常", price:24},
+  {name:"番茄牛腩", cat:"家常", price:42},
+  {name:"小炒肉", cat:"家常", price:28},
+  {name:"手撕包菜", cat:"家常", price:16},
+  {name:"酸辣土豆丝", cat:"家常", price:14},
+  {name:"地三鲜", cat:"家常", price:22},
+  {name:"木须肉", cat:"家常", price:26},
+  {name:"糖醋里脊", cat:"家常", price:28},
+  {name:"家常豆腐", cat:"家常", price:18},
+  {name:"酱爆茄子", cat:"家常", price:20},
+  {name:"韭菜炒蛋", cat:"家常", price:16},
+  {name:"鸡蛋炒饭", cat:"家常", price:12},
+
+  // 主食
+  {name:"米饭", cat:"主食", price:2},
+  {name:"炒饭", cat:"主食", price:12},
+  {name:"扬州炒饭", cat:"主食", price:14},
+  {name:"蛋炒饭", cat:"主食", price:12},
+  {name:"炒面", cat:"主食", price:12},
+  {name:"担担面", cat:"主食", price:14},
+  {name:"馒头", cat:"主食", price:1},
+  {name:"花卷", cat:"主食", price:2},
+  {name:"锅贴", cat:"主食", price:8},
+  {name:"饺子", cat:"主食", price:12},
+  {name:"包子", cat:"主食", price:8},
+
+  // 汤
+  {name:"紫菜蛋花汤", cat:"汤", price:10},
+  {name:"酸辣汤", cat:"汤", price:12},
+  {name:"冬瓜排骨汤", cat:"汤", price:22},
+  {name:"番茄蛋汤", cat:"汤", price:10},
+  {name:"菌菇汤", cat:"汤", price:18},
+  {name:"鸡汤", cat:"汤", price:20},
+  {name:"玉米排骨汤", cat:"汤", price:24},
+
+  // 凉菜
+  {name:"凉拌黄瓜", cat:"凉菜", price:10},
+  {name:"凉拌木耳", cat:"凉菜", price:12},
+  {name:"凉拌海带丝", cat:"凉菜", price:10},
+  {name:"拍黄瓜", cat:"凉菜", price:10},
+  {name:"蒜泥白肉", cat:"凉菜", price:28},
+  {name:"凉拌粉皮", cat:"凉菜", price:12},
+  {name:"凉拌牛肉", cat:"凉菜", price:38}
+];
+
+let cart = {};
+
+function renderMenu(filterCat="全部", keyword="") {
+  const menu = document.getElementById("menu");
+  menu.innerHTML = "";
+  dishes.filter(d =>
+    (filterCat==="全部" || d.cat===filterCat) &&
+    d.name.includes(keyword)
+  ).forEach(dish => {
+    const div = document.createElement("div");
+    div.className = "dish";
+    div.innerHTML = `
+      <h3>${dish.name}</h3>
+      <div>¥${dish.price}</div>
+      <div class="controls">
+        <button onclick="addToCart('${dish.name}')">+</button>
+        <span>${cart[dish.name] || 0}</span>
+        <button onclick="removeFromCart('${dish.name}')">-</button>
+      </div>
+    `;
+    menu.appendChild(div);
+  });
+}
+
+function addToCart(name) {
+  cart[name] = (cart[name] || 0) + 1;
+  updateCartButton();
+  renderMenu(currentCat, document.getElementById("search").value);
+}
+
+function removeFromCart(name) {
+  if(cart[name]) {
+    cart[name]--;
+    if(cart[name]<=0) delete cart[name];
+    updateCartButton();
+    renderMenu(currentCat, document.getElementById("search").value);
+  }
+}
+
+function updateCartButton() {
+  const totalItems = Object.values(cart).reduce((a,b) => a+b, 0);
+  const totalPrice = Object.entries(cart).reduce((sum, [name, qty]) => {
+    const price = dishes.find(d=>d.name===name).price;
+    return sum + price * qty;
+  }, 0);
+  document.getElementById("toggleCart").innerText = `购物车 (${totalItems}) - ¥${totalPrice}`;
+  renderCartTable();
+}
+
+function renderCartTable() {
+  const tableBody = document.querySelector("#cartTable tbody");
+  tableBody.innerHTML = "";
+  Object.entries(cart).forEach(([name, qty]) => {
+    const price = dishes.find(d=>d.name===name).price;
+    const row = `<tr><td>${name}</td><td>${qty}</td><td>¥${price*qty}</td></tr>`;
+    tableBody.innerHTML += row;
+  });
+}
+
+function clearCart() {
+  cart = {};
+  updateCartButton();
+}
+
+document.getElementById("toggleCart").addEventListener("click", () => {
+  const details = document.getElementById("cartDetails");
+  details.style.display = details.style.display === "block" ? "none" : "block";
+});
+
+document.getElementById("search").addEventListener("input", e => {
+  renderMenu(currentCat, e.target.value);
+});
+
+document.getElementById("randomPick").addEventListener("click", () => {
+  const filterCat = currentCat === "全部" ? null : currentCat;
+  let candidates = dishes.filter(d => !filterCat || d.cat === filterCat);
+  candidates = candidates.sort(() => Math.random() - 0.5);
+  const picks = candidates.slice(0, 3);
+  picks.forEach(dish => {
+    cart[dish.name] = (cart[dish.name] || 0) + 1;
+  });
+  updateCartButton();
+  renderMenu(currentCat, document.getElementById("search").value);
+});
+
+let currentCat = "全部";
+document.getElementById("categoryButtons").addEventListener("click", e => {
+  if(e.target.tagName==="BUTTON") {
+    document.querySelectorAll(".category button").forEach(btn=>btn.classList.remove("active"));
+    e.target.classList.add("active");
+    currentCat = e.target.dataset.cat;
+    renderMenu(currentCat, document.getElementById("search").value);
+  }
+});
+
+renderMenu();
+updateCartButton();
+</script>
+
+</body>
+</html>
