@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>照美丽的菜单</title>
+<style>
+  body {font-family: Arial, sans-serif; background: #d1f0c1; padding: 10px; margin:0;}
+  h1 {text-align: center; color: #2e7d32; margin-bottom: 10px;}
+  .menu {display: flex; flex-wrap: wrap; justify-content: center;}
+  .dish {
+    border: 2px solid #4caf50;
+    border-radius: 8px;
+    margin: 6px;
+    width: 140px;
+    text-align: center;
+    background: white;
+    padding: 8px;
+    cursor: pointer;
+  }
+  .dish.selected {background: #a5d6a7;}
+  .dish img {width: 120px; height: 90px; object-fit: cover; border-radius: 5px;}
+  .dish-name {font-weight: bold; margin: 6px 0 4px;}
+  .dish-price {color: #388e3c; margin-bottom: 6px;}
+  .quantity {
+    margin-top: 6px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  .quantity button {
+    background: #4caf50;
+    border: none;
+    color: white;
+    padding: 4px 8px;
+    font-size: 16px;
+    border-radius: 4px;
+    margin: 0 6px;
+    cursor: pointer;
+  }
+  .quantity span {
+    font-size: 16px;
+    width: 24px;
+    display: inline-block;
+    text-align: center;
+  }
+  #submitOrder {
+    display: block;
+    margin: 20px auto 10px;
+    background: #388e3c;
+    color: white;
+    border: none;
+    padding: 12px 30px;
+    font-size: 18px;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+  .pagination {
+    text-align: center;
+    margin-bottom: 10px;
+  }
+  .pagination button {
+    background: #4caf50;
+    border: none;
+    color: white;
+    padding: 8px 14px;
+    margin: 0 4px;
+    font-size: 16px;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  .pagination button:disabled {
+    background: #a5d6a7;
+    cursor: default;
+  }
+</style>
+</head>
+<body>
+<h1>照美丽的菜单</h1>
+<div class="menu" id="menuList"></div>
+<div class="pagination" id="pagination"></div>
+<button id="submitOrder">提交订单</button>
+
+<script>
+const menuData = [
+  {name:"宫保鸡丁", price:28, img:"https://img.meishij.net/p/20150814/201508141403462856629.jpg"},
+  {name:"麻婆豆腐", price:18, img:"https://img.meishij.net/p/20150820/201508201439164799446.jpg"},
+  {name:"鱼香肉丝", price:26, img:"https://img.meishij.net/p/20160111/201601111425487542780.jpg"},
+  {name:"酸辣粉", price:15, img:"https://img.meishij.net/p/20140901/201409011158399258238.jpg"},
+  {name:"水煮牛肉", price:38, img:"https://img.meishij.net/p/20151202/201512021331535986136.jpg"},
+  {name:"辣子鸡", price:32, img:"https://img.meishij.net/p/20150723/201507231359335815332.jpg"},
+  {name:"回锅肉", price:30, img:"https://img.meishij.net/p/20161118/201611181122168050041.jpg"},
+  {name:"毛血旺", price:40, img:"https://img.meishij.net/p/20140714/201407141418453617616.jpg"},
+  {name:"干锅花菜", price:22, img:"https://img.meishij.net/p/20150604/201506041253334983653.jpg"},
+  {name:"红烧肉", price:36, img:"https://img.meishij.net/p/20140814/201408141139153468722.jpg"},
+  {name:"夫妻肺片", price:28, img:"https://img.meishij.net/p/20150910/201509101249545477222.jpg"},
+  {name:"酸菜鱼", price:48, img:"https://img.meishij.net/p/20140609/201406091529453036146.jpg"},
+  {name:"干煸四季豆", price:20, img:"https://img.meishij.net/p/20150127/201501271539584878251.jpg"},
+  {name:"口水鸡", price:30, img:"https://img.meishij.net/p/20140723/201407231030511347070.jpg"},
+  {name:"鱼香茄子", price:22, img:"https://img.meishij.net/p/20140813/201408131432573754603.jpg"},
+  {name:"椒麻鸡", price:28, img:"https://img.meishij.net/p/20140923/201409231602572908644.jpg"},
+  {name:"凉拌黄瓜", price:12, img:"https://img.meishij.net/p/20150630/201506301043216709383.jpg"},
+  {name:"口蘑炒肉片", price:25, img:"https://img.meishij.net/p/20150302/201503021430493981101.jpg"},
+  {name:"香辣虾", price:58, img:"https://img.meishij.net/p/20131209/201312091229053182997.jpg"},
+  {name:"酸辣土豆丝", price:15, img:"https://img.meishij.net/p/20130731/201307311404335380038.jpg"},
+  {name:"干锅牛蛙", price:45, img:"https://img.meishij.net/p/20150714/201507141330214223918.jpg"},
+  {name:"毛豆炒肉末", price:22, img:"https://img.meishij.net/p/20150904/201509041052221838211.jpg"},
+  {name:"蒜泥白肉", price:26, img:"https://img.meishij.net/p/20150709/201507091327172965192.jpg"},
+  {name:"麻辣香锅", price:55, img:"https://img.meishij.net/p/20161011/201610111034423971484.jpg"},
+  {name:"蒜蓉菠菜", price:15, img:"https://img.meishij.net/p/20150604/201506041057409204044.jpg"},
+  {name:"香辣豆腐", price:20, img:"https://img.meishij.net/p/20130903/201309031405232538226.jpg"},
+  {name:"豆豉鲮鱼油麦菜", price:22, img:"https://img.meishij.net/p/20151125/201511251205442258070.jpg"},
+  {name:"黄豆焖猪蹄", price:48, img:"https://img.meishij.net/p/20150121/201501211629474547213.jpg"},
+  {name:"青椒肉丝", price:25, img:"https://img.meishij.net/p/20130514/201305141014355150500.jpg"},
+  {name:"蒸水蛋", price:10, img:"https://img.meishij.net/p/20140714/201407141050011912436.jpg"},
+  {name:"红烧排骨", price:40, img:"https://img.meishij.net/p/20140519/201405191606272760661.jpg"},
+  {name:"香菇滑鸡", price:38, img:"https://img.meishij.net/p/20150826/201508261040207004795.jpg"},
+  {name:"酸辣凉粉", price:15, img:"https://img.meishij.net/p/20150513/201505131109125696054.jpg"},
+  {name:"干锅兔肉", price:50, img:"https://img.meishij.net/p/20151021/201510211027568385727.jpg"},
+  {name:"香煎豆腐", price:18, img:"https://img.meishij.net/p/20151010/201510101458307072961.jpg"},
+  {name:"芹菜炒牛肉", price:35, img:"https://img.meishij.net/p/20140403/201404031617441995129.jpg"},
+  {name:"麻辣牛肉", price:42, img:"https://img.meishij.net/p/20141118/201411181058238644575.jpg"},
+  {name:"豆花鱼", price:40, img:"https://img.meishij.net/p/20150211/201502111014119588050.jpg"},
+  {name:"泡椒凤爪", price:18, img:"https://img.meishij.net/p/20140827/201408271237184914598.jpg"},
+  {name:"鱼香豆腐", price:22, img:"https://img.meishij.net/p/20150518/201505181035479523972.jpg"},
+  {name:"香辣豆皮", price:20, img:"https://img.meishij.net/p/20140617/201406171525485267235.jpg"},
+  {name:"干锅土豆片", price:28, img:"https://img.meishij.net/p/20150520/201505201359336431837.jpg"},
+  {name:"干锅牛肉", price:48, img:"https://img.meishij.net/p/20150608/201506081147492012592.jpg"},
+  {name:"青椒皮蛋", price:18, img:"https://img.meishij.net/p/20141125/201411251304175235064.jpg"},
+  {name:"凉拌海带丝", price:15, img:"https://img.meishij.net/p/20141030/201410301156597835943.jpg"},
+  {name:"香辣肚片", price:38, img:"https://img.meishij.net/p/20150819/201508191110488747574.jpg"},
+  {name:"香辣鸡翅", price:36, img:"https://img.meishij.net/p/20141008/201410081200541639628.jpg"},
+  {name:"鱼香鸡蛋", price:22, img:"https://img.meishij.net/p/20141115/201411151522337192025.jpg"},
+  {name:"红烧牛腩", price:45, img:"https://img.meishij.net/p/20140117/201401171043163289805.jpg"},
+  {name:"麻辣豆腐", price:20, img:"https://img.meishij.net/p/20130925/201309251406557902524.jpg"},
+  {name:"酸辣白菜", price:15, img:"https://img.meishij.net/p/20140912/201409121201158145029.jpg"},
+  {name:"香辣花蛤", price:48, img:"https://img.meishij.net/p/20150602/201506021050531247427.jpg"},
+  {name:"蒜苗炒肉", price:28, img:"https://img.meishij.net/p/20151012/201510121113058131242.jpg"},
+  {name:"青椒土豆丝", price:15, img:"https://img.meishij.net/p/20141118/201411181315091169659.jpg"},
+  {name:"炒牛河", price:32, img:"https://img.meishij.net/p/20150407/201504071419136116175.jpg"},
+  {name:"泡椒牛蛙", price:45, img:"https://img.meishij.net/p/20150512/201505121047355675463.jpg"},
+  {name:"干锅鸭头", price:55, img:"https://img.meishij.net/p/20150310/201503101346374115983.jpg"},
+  {name:"豆瓣酱炒茄子", price:20, img:"https://img.meishij.net/p/20140815/201408151434522105153.jpg"},
+  {name:"香辣蟹", price:68, img:"https://img.meishij.net/p/20140107/201401071204232153935.jpg"},
+  {name:"辣炒田螺", price:35, img:"https://img.meishij.net/p/20140615/201406151341304846738.jpg"},
+  {name:"香菜拌牛肉", price:38, img:"https://img.meishij.net/p/20150301/201503011329393376820.jpg"},
+  {name:"锅包肉", price:40, img:"https://img.meishij.net/p/20140226/201402261507518745317.jpg"},
+  {name:"牛肉粉丝汤", price:28, img:"https://img.meishij.net/p/20150217/201502171044127080309.jpg"},
+  {name:"酱爆鸡丁", price:30, img:"https://img.meishij.net/p/20141225/201412251218543553112.jpg"},
+  {name:"香辣藕片", price:22, img:"https://img.meishij.net/p/20141104/201411041326123634217.jpg"},
+  {name:"凉拌三丝", price:15, img:"https://img.meishij.net/p/20150319/201503191418525494681.jpg"},
+  {name:"酸辣汤", price:18, img:"https://img.meishij.net/p/20140217/201402171059128834690.jpg"},
+  {name:"鸡蛋炒饭", price:22, img:"https://img.meishij.net/p/20150530/201505301134145943272.jpg"},
+  {name:"香辣鱼头", price:58, img:"https://img.meishij.net/p/20150504/201505041107373214791.jpg"},
+  {name:"川北凉粉", price:18, img:"https://img.meishij.net/p/20140911/201409111028233535008.jpg"},
+  {name:"香辣肥肠", price:40, img:"https://img.meishij.net/p/20150721/201507211054134668837.jpg"},
+  {name:"酸辣黄瓜", price:12, img:"https://img.meishij.net/p/20150402/201504021110229139353.jpg"},
+  {name:"红烧带鱼", price:38, img:"https://img.meishij.net/p/20140324/201403241424183953596.jpg"},
+  {name:"青椒炒鸡蛋", price:18, img:"https://img.meishij.net/p/20140810/201408101313207878375.jpg"},
+  {name:"蒜香排骨", price:42, img:"https://img.meishij.net/p/20150421/201504211116093878204.jpg"},
+  {name:"香辣田鸡", price:48, img:"https://img.meishij.net/p/20141111/201411111213392626238.jpg"},
+  {name:"毛豆炒虾仁", price:30, img:"https://img.meishij.net/p/20150113/201501131215312888973.jpg"},
+  {name:"酸辣白菜丝", price:15, img:"https://img.meishij.net/p/20140920/201409201026588814508.jpg"},
+  {name:"泡椒炒鸡杂", price:35, img:"https://img.meishij.net/p/20140924/201409241343169870674.jpg"},
+  {name:"香辣牛肚", price:38, img:"https://img.meishij.net/p/20141015/201410151213347364948.jpg"},
+  {name:"干锅牛肝菌", price:45, img:"https://img.meishij.net/p/20150505/201505051418381921994.jpg"},
+  {name:"凉拌木耳", price:15, img:"https://img.meishij.net/p/20141009/201410091015184738127.jpg"},
+  {name:"香辣田螺", price:35, img:"https://img.meishij.net/p/20140617/201406171521597693244.jpg"},
+  {name:"酸辣猪肚", price:38, img:"https://img.meishij.net/p/20141122/201411221350112932854.jpg"},
+  {name:"锅塌豆腐", price:20, img:"https://img.meishij.net/p/20140507/201405071134002317854.jpg"},
+  {name:"酱爆牛肉", price:40, img:"https://img.meishij.net/p/20140826/201408261337526848810.jpg"},
+  {name:"糖醋排骨", price:38, img:"https://img.meishij.net/p/20141212/201412121145043573952.jpg"},
+  {name:"香辣鸭头", price:55, img:"https://img.meishij.net/p/20150512/201505121138199893388.jpg"},
+  {name:"泡椒豆腐", price:18, img:"https://img.meishij.net/p/20140814/201408141336068488803.jpg"},
+  {name:"干锅鸡翅", price:42, img:"https://img.meishij.net/p/20140904/201409041307502223883.jpg"},
+  {name:"麻辣田鸡", price:48, img:"https://img.meishij.net/p/20140830/201408301318414409819.jpg"},
+  {name:"香辣牛蛙", price:45, img:"https://img.meishij.net/p/20141028/201410281258431836410.jpg"},
+  {name:"麻婆豆腐煲", price:25, img:"https://img.meishij.net/p/20150523/201505231200135030474.jpg"},
+  {name:"鱼香豆腐煲", price:28, img:"https://img.meishij.net/p/20140925/201409251304015290142.jpg"},
+  {name:"酸菜鱼片", price:48, img:"https://img.meishij.net/p/20141206/201412061231497927960.jpg"},
+  {name:"红烧鸡块", price:35, img:"https://img.meishij.net/p/20150414/201504141335066636491.jpg"},
+  {name:"香辣兔肉", price:50, img:"https://img.meishij.net/p/20140718/201407181212462760384.jpg"},
+  {name:"干锅肥肠", price:55, img:"https://img.meishij.net/p/20150315/201503151122385813273.jpg"},
+  {name:"川味辣椒炒肉", price:30, img:"https://img.meishij.net/p/20150311/201503111312424167900.jpg"},
+  {name:"麻辣香肠", price:38, img:"https://img.meishij.net/p/20140429/201404291209242648785.jpg"},
+  {name:"鱼香豆腐丸子", price:28, img:"https://img.meishij.net/p/20150119/201501191424419938547.jpg"},
+  {name:"香辣排骨煲", price:48, img:"https://img.meishij.net/p/20140509/201405091344281386415.jpg"}
+];
+
+// 每页菜品数量
+const itemsPerPage = 12;
+let currentPage = 1;
+let order = {};
+
+const menuListEl = document.getElementById("menuList");
+const paginationEl = document.getElementById("pagination");
+
+function renderMenu() {
+  menuListEl.innerHTML = "";
+  const startIdx = (currentPage -1) * itemsPerPage;
+  const endIdx = Math.min(startIdx + itemsPerPage, menuData.length);
+  for(let i = startIdx; i < endIdx; i++) {
+    const dish = menuData[i];
+    const dishDiv = document.createElement("div");
+    dishDiv.className = "dish";
+    dishDiv.dataset.index = i;
+
+    const imgEl = document.createElement("img");
+    imgEl.src = dish.img;
+    imgEl.alt = dish.name;
+
+    const nameEl = document.createElement("div");
+    nameEl.className = "dish-name";
+    nameEl.textContent = dish.name;
+
+    const priceEl = document.createElement("div");
+    priceEl.className = "dish-price";
+    priceEl.textContent = `¥${dish.price}`;
+
+    // 数量控制
+    const quantityDiv = document.createElement("div");
+    quantityDiv.className = "quantity";
+
+    const minusBtn = document.createElement("button");
+    minusBtn.textContent = "-";
+    minusBtn.onclick = () => {
+      if(order[i]) {
+        order[i]--;
+        if(order[i] <= 0) delete order[i];
+        renderMenu();
+      }
+    };
+
+    const qtySpan = document.createElement("span");
+    qtySpan.textContent = order[i] || 0;
+
+    const plusBtn = document.createElement("button");
+    plusBtn.textContent = "+";
+    plusBtn.onclick = () => {
+      order[i] = (order[i] || 0) + 1;
+      renderMenu();
+    };
+
+    quantityDiv.appendChild(minusBtn);
+    quantityDiv.appendChild(qtySpan);
+    quantityDiv.appendChild(plusBtn);
+
+    dishDiv.appendChild(imgEl);
+    dishDiv.appendChild(nameEl);
+    dishDiv.appendChild(priceEl);
+    dishDiv.appendChild(quantityDiv);
+
+    menuListEl.appendChild(dishDiv);
+  }
+  renderPagination();
+}
+
+function renderPagination() {
+  paginationEl.innerHTML = "";
+
+  const totalPages = Math.ceil(menuData.length / itemsPerPage);
+
+  // 上一页
+  const prevBtn = document.createElement("button");
+  prevBtn.textContent = "上一页";
+  prevBtn.disabled = currentPage === 1;
+  prevBtn.onclick = () => {
+    if(currentPage > 1) {
+      currentPage--;
+      renderMenu();
+    }
+  };
+  paginationEl.appendChild(prevBtn);
+
+  // 页码显示 当前页前后最多2页
+  const pageRange = [];
+  for(let p = Math.max(1, currentPage - 2); p <= Math.min(totalPages, currentPage + 2); p++) {
+    pageRange.push(p);
+  }
+  pageRange.forEach(p => {
+    const btn = document.createElement("button");
+    btn.textContent = p;
+    if(p === currentPage) {
+      btn.disabled = true;
+      btn.style.background = "#81c784";
+    }
+    btn.onclick = () => {
+      currentPage = p;
+      renderMenu();
+    };
+    paginationEl.appendChild(btn);
+  });
+
+  // 下一页
+  const nextBtn = document.createElement("button");
+  nextBtn.textContent = "下一页";
+  nextBtn.disabled = currentPage === totalPages;
+  nextBtn.onclick = () => {
+    if(currentPage < totalPages) {
+      currentPage++;
+      renderMenu();
+    }
+  };
+  paginationEl.appendChild(nextBtn);
+}
+
+document.getElementById("submitOrder").onclick = () => {
+  if(Object.keys(order).length === 0) {
+    alert("请先选择菜品数量");
+    return;
+  }
+  let orderText = "";
+  let totalPrice = 0;
+  for(let idx in order) {
+    const dish = menuData[idx];
+    const qty = order[idx];
+    orderText += `${dish.name} x${qty}  ¥${dish.price * qty}\n`;
+    totalPrice += dish.price * qty;
+  }
+  orderText += `总计: ¥${totalPrice}`;
+
+  // 你自己的Google表单提交地址
+  const formAction = "https://docs.google.com/forms/d/e/1FAIpQLSerJIs1BXbw-80lN3okAEn5viTedr1D4uCiYgt51jz4HgvWrQ/formResponse";
+
+  // Google表单里对应的订单内容字段 entry id （自己确认）
+  const orderFieldName = "entry.1873846742";
+
+  const formData = new FormData();
+  formData.append(orderFieldName, orderText);
+
+  fetch(formAction, {
+    method: "POST",
+    mode: "no-cors",
+    body: formData
+  }).then(() => {
+    alert("订单已提交，谢谢！");
+    order = {};
+    currentPage = 1;
+    renderMenu();
+  }).catch(() => {
+    alert("提交失败，请稍后再试");
+  });
+};
+
+renderMenu();
+</script>
+</body>
+</html>
